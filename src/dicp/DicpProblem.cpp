@@ -35,7 +35,7 @@ DicpImage DicpProblem::get_image(dicp_image_key image) {
 
 DicpProblem DicpProblem::load(string filename) {
     fstream ifs { filename };
-    if (!ifs) throw dicp_load_failure();
+    if (!ifs) throw dicp_load_failure { };
 
     map<dicp_command_key, DicpCommand> cmds { };
     map<dicp_image_key, DicpImage> imgs { };
