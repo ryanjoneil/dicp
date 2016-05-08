@@ -9,11 +9,15 @@
 
 using namespace std;
 
+typedef string dicp_command_key;
+
 class DicpCommand {
 public:
-    DicpCommand(string command, int cost);
+    DicpCommand(dicp_command_key command, int cost);
+    DicpCommand(const DicpCommand& command);
+    DicpCommand& operator=(const DicpCommand& command);
 
-    const string command;
+    const dicp_command_key command;
     const int cost;
 
     bool operator< (const DicpCommand& cmd) const;

@@ -6,18 +6,27 @@
 #define DICP_DICPPROBLEM_H
 
 #include <exception>
-#include <set>
+#include <map>
+#include <vector>
 #include "DicpCommand.h"
+#include "DicpImage.h"
 
 using namespace std;
 
 class DicpProblem {
 protected:
-    set<DicpCommand> commands;
-    DicpProblem(set<DicpCommand> commands);
+    map<dicp_command_key, DicpCommand> commands;
+    map<dicp_image_key, DicpImage> images;
+    vector<DicpCommand> commands_vec;
+    vector<DicpImage> images_vec;
+    DicpProblem(map<dicp_command_key, DicpCommand> commands, map<dicp_image_key, DicpImage> images);
 
 public:
-    set <DicpCommand> get_commands(void);
+    vector <DicpCommand> get_commands(void);
+    vector <DicpImage> get_images(void);
+    DicpCommand get_command(dicp_command_key command);
+    DicpImage get_image(dicp_image_key image);
+
     static DicpProblem load(string filename);
 };
 
