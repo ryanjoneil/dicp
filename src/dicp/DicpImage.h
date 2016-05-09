@@ -26,7 +26,7 @@ public:
     void add_command(DicpCommand cmd);
     vector<DicpCommand> get_commands(void);
 
-    const dicp_image_key image;
+    dicp_image_key image;
 
     bool operator< (const DicpImage& img) const;
 };

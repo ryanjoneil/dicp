@@ -9,7 +9,7 @@ using namespace std;
 
 DicpImage::DicpImage(dicp_image_key image, vector<DicpCommand> commands) : image{image}, commands{commands} { }
 
-DicpImage::DicpImage(dicp_image_key image) : DicpImage{image, {}} { }
+DicpImage::DicpImage(dicp_image_key image) : DicpImage{image, vector<DicpCommand>{ }} { }
 
 DicpImage::DicpImage(const DicpImage& image) : DicpImage{image.image, image.commands} { }
 
@@ -19,6 +19,12 @@ void DicpImage::add_command(DicpCommand cmd) {
 
 vector<DicpCommand> DicpImage::get_commands(void) {
     return vector<DicpCommand>{ commands };
+}
+
+DicpImage& DicpImage::operator=(const DicpImage& image) {
+    this->image = image.image;
+    commands = image.commands;
+    return *this;
 }
 
 bool DicpImage::operator< (const DicpImage& img) const {

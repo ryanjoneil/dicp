@@ -13,5 +13,4 @@ class DicpGecodeExtensiveSolver : public DicpSolver {
     void solve(DicpProblem problem);
 };
 
-
 #endif //DICP_DICPGECODEEXTENSIVESOLVER_H

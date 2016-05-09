@@ -3,13 +3,14 @@
 //
 
 #include <fstream>
+#include <vector>
 #include "DicpProblem.h"
 #include "../third-party/json.hpp"
 
 using json = nlohmann::json;
 
 DicpProblem::DicpProblem(map<dicp_command_key, DicpCommand> commands, map<dicp_image_key, DicpImage> images) :
-        commands(commands), images(images), commands_vec({ }), images_vec({ }) {
+        commands(commands), images(images), commands_vec(vector<DicpCommand>{ }), images_vec(vector<DicpImage>{ }) {
     for (map<dicp_command_key, DicpCommand>::iterator it = commands.begin(); it != commands.end(); ++it)
         commands_vec.push_back(it->second);
 
@@ -34,7 +35,7 @@ DicpImage DicpProblem::get_image(dicp_image_key image) {
 }
 
 DicpProblem DicpProblem::load(string filename) {
-    fstream ifs { filename };
+    fstream ifs { filename.c_str() };
     if (!ifs) throw dicp_load_failure { };
 
     map<dicp_command_key, DicpCommand> cmds { };

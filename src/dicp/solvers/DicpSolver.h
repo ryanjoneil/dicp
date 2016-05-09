@@ -17,4 +17,10 @@ public:
 
 class dicp_invalid_solver : public exception { };
 
+class dicp_solving_error : public exception {
+public:
+    dicp_solving_error(string message) : message{message} { }
+    const string message;
+};
+
 #endif //DICP_DICPSOLVER_H
