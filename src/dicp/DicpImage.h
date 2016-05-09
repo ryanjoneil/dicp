@@ -25,6 +25,7 @@ public:
 
     void add_command(DicpCommand cmd);
     vector<DicpCommand> get_commands(void);
+    int size(void);
 
     dicp_image_key image;
 

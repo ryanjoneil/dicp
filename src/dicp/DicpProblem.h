@@ -25,6 +25,7 @@ public:
     vector <DicpCommand> get_commands(void);
     vector <DicpImage> get_images(void);
     DicpCommand get_command(dicp_command_key command);
+    DicpCommand get_command(int id);
     DicpImage get_image(dicp_image_key image);
 
     static DicpProblem load(string filename);

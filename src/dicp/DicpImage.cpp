@@ -21,6 +21,10 @@ vector<DicpCommand> DicpImage::get_commands(void) {
     return vector<DicpCommand>{ commands };
 }
 
+int DicpImage::size(void) {
+    return commands.size();
+}
+
 DicpImage& DicpImage::operator=(const DicpImage& image) {
     this->image = image.image;
     commands = image.commands;

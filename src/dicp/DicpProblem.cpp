@@ -2,6 +2,7 @@
 // Created by Ryan J. O'Neil on 5/6/16.
 //
 
+#include <limits>
 #include <fstream>
 #include <vector>
 #include "DicpProblem.h"
@@ -28,6 +29,10 @@ vector<DicpImage> DicpProblem::get_images(void) {
 
 DicpCommand DicpProblem::get_command(dicp_command_key command) {
     return commands.find(command)->second;
+}
+
+DicpCommand DicpProblem::get_command(int id) {
+    return commands_vec[id];
 }
 
 DicpImage DicpProblem::get_image(dicp_image_key image) {

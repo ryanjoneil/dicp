@@ -14,7 +14,9 @@ using namespace Gecode;
 
 class DicpGecodeExtensiveSpace : public Space {
 protected:
+    DicpProblem problem;
     map<dicp_image_key, IntVarArray> schedules;
+    map<dicp_image_key, IntSet> domains;
 
 public:
     DicpGecodeExtensiveSpace(DicpProblem problem);

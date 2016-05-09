@@ -33,6 +33,9 @@ int main(int argc, char** argv) {
     } catch (dicp_invalid_solver dis) {
         cerr << "failed calling solver '" << solver_name << "'" << endl;
         return 1;
+    } catch (dicp_solving_error dse) {
+        cerr << "error during solve: '" << dse.message << "'" << endl;
+        return 1;
     }
 
     return 0;
