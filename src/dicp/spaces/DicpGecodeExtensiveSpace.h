@@ -12,11 +12,13 @@
 
 using namespace Gecode;
 
-class DicpGecodeExtensiveSpace : public Space {
+class DicpGecodeExtensiveSpace : public IntMinimizeSpace {
 protected:
     DicpProblem problem;
     map<dicp_image_key, IntVarArray> schedules;
     map<dicp_image_key, IntSet> domains;
+    BoolVarArray source;
+    IntVar total_cost;
 
 public:
     DicpGecodeExtensiveSpace(DicpProblem problem);
@@ -24,6 +26,9 @@ public:
     // Search support
     DicpGecodeExtensiveSpace(bool share, DicpGecodeExtensiveSpace& s);
     virtual Space* copy(bool share);
+
+    // Objective function
+    virtual IntVar cost(void) const;
 
     // Print solution
     void print(void) const;
