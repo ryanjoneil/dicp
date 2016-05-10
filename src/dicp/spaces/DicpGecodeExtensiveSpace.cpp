@@ -40,17 +40,9 @@ DicpGecodeExtensiveSpace::DicpGecodeExtensiveSpace(DicpProblem problem) : proble
 }
 
 DicpGecodeExtensiveSpace::DicpGecodeExtensiveSpace(bool share, DicpGecodeExtensiveSpace& s) :
-        Space(share, s), problem{s.problem} {
-    // TODO: can some of this be done using initializers?
-    for (map<dicp_image_key, IntVarArray>::iterator it = s.schedules.begin(); it != s.schedules.end(); ++it) {
-        IntSet domain = s.domains.find(it->first)->second;
-        pair<dicp_image_key, IntSet> d{it->first, domain};
-        domains.insert(d);
-
-        pair<dicp_image_key, IntVarArray> p{it->first, IntVarArray{*this, it->second.size(), domain}};
-        schedules.insert(p);
+        Space(share, s), problem{s.problem}, schedules{s.schedules}, domains{s.domains} {
+    for (map<dicp_image_key, IntVarArray>::iterator it = s.schedules.begin(); it != s.schedules.end(); ++it)
         schedules.find(it->first)->second.update(*this, share, it->second);
-    }
 }
 
 Space* DicpGecodeExtensiveSpace::copy(bool share) {
@@ -62,9 +54,8 @@ void DicpGecodeExtensiveSpace::print(void) const {
     for (map<dicp_image_key, IntVarArray>::const_iterator it = schedules.begin(); it != schedules.end(); ++it) {
         cout << "[" << it->first << "] ";
         for (IntVarArray::const_iterator sit = it->second.begin(); sit != it->second.end(); ++sit)
-            cout << p.get_command((int) sit->val()).command << " ";
+            cout << p.get_command(sit->val()).command << " ";
         cout << endl;
     }
-//    << it->second << endl;
     cout << "---------------" << endl;
 }
