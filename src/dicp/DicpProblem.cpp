@@ -4,6 +4,7 @@
 
 #include <limits>
 #include <fstream>
+#include <set>
 #include <vector>
 #include "DicpProblem.h"
 #include "../third-party/json.hpp"
@@ -40,11 +41,11 @@ DicpImage DicpProblem::get_image(dicp_image_key image) {
 }
 
 DicpProblem DicpProblem::load(string filename) {
-    fstream ifs { filename.c_str() };
-    if (!ifs) throw dicp_load_failure { };
+    fstream ifs {filename.c_str()};
+    if (!ifs) throw dicp_load_failure{ };
 
-    map<dicp_command_key, DicpCommand> cmds { };
-    map<dicp_image_key, DicpImage> imgs { };
+    map<dicp_command_key, DicpCommand> cmds{ };
+    map<dicp_image_key, DicpImage> imgs{ };
 
     auto input = json::parse(ifs);
     for (json::iterator it = input.begin(); it != input.end(); ++it)
@@ -56,14 +57,14 @@ DicpProblem DicpProblem::load(string filename) {
 
         else if (it.key() == "images")
             for (json::iterator imgit = (*it).begin(); imgit != (*it).end(); ++imgit) {
-                DicpImage i {imgit.key()};
-                pair<dicp_image_key, DicpImage> p {i.image, i};
+                DicpImage i{imgit.key()};
+                pair<dicp_image_key, DicpImage> p{i.image, i};
                 imgs.insert(p);
 
                 for (json::iterator imgcmdit = (*imgit).begin(); imgcmdit != (*imgit).end(); ++imgcmdit)
-                     imgs.find(i.image)->second.add_command(cmds.find(imgcmdit.value())->second);
+                    imgs.find(i.image)->second.add_command(cmds.find(imgcmdit.value())->second);
             }
 
-    DicpProblem p = DicpProblem(cmds, imgs);
+    DicpProblem p = DicpProblem{cmds, imgs};
     return p;
 }

@@ -13,7 +13,7 @@ DicpGecodeExtensiveSpace::DicpGecodeExtensiveSpace(DicpProblem problem) : proble
     schedules = map<dicp_image_key, IntVarArray>{ };
     domains = map<dicp_image_key, IntSet>{ };
     source = BoolVarArray{*this, (int) problem.get_commands().size(), 0, 1};
-    total_cost = IntVar(*this, 0, Int::Limits::max);
+    total_cost = IntVar{*this, 0, Int::Limits::max};
 
     // Schedule for each individual image
     vector<DicpImage> images = problem.get_images();

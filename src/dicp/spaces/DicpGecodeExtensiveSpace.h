@@ -11,6 +11,7 @@
 #include "../DicpProblem.h"
 
 using namespace Gecode;
+using namespace std;
 
 class DicpGecodeExtensiveSpace : public IntMinimizeSpace {
 protected:
