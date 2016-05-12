@@ -27,6 +27,7 @@ public:
     DicpCommand get_command(dicp_command_key command);
     DicpCommand get_command(int id);
     DicpImage get_image(dicp_image_key image);
+    size_t num_stages(void);
 
     static DicpProblem load(string filename);
 };

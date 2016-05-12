@@ -19,6 +19,10 @@ protected:
     map<dicp_image_key, IntVarArray> schedules;
     map<dicp_image_key, IntSet> domains;
     BoolVarArray source;
+    vector<vector<BoolVarArray>> arcs;
+    vector<IntVarArray> nodes;
+    vector<vector<IntVarArray>> entries;
+    IntVarArray stage_costs;
     IntVar total_cost;
 
 public:

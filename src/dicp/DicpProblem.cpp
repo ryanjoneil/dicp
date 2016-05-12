@@ -40,6 +40,14 @@ DicpImage DicpProblem::get_image(dicp_image_key image) {
     return images.find(image)->second;
 }
 
+size_t DicpProblem::num_stages(void) {
+    size_t stages = 0;
+    for (vector<DicpImage>::iterator it = images_vec.begin(); it != images_vec.end(); ++it)
+        if ((*it).size() > stages)
+            stages = (*it).size();
+    return stages;
+}
+
 DicpProblem DicpProblem::load(string filename) {
     fstream ifs {filename.c_str()};
     if (!ifs) throw dicp_load_failure{ };
