@@ -14,6 +14,7 @@ DicpGecodeExtensiveSpace::DicpGecodeExtensiveSpace(DicpProblem problem) : proble
     size_t num_commands = problem.get_commands().size();
     size_t num_stages = problem.num_stages();
 
+    zero = IntVar{*this, 0, 0};
     schedules = map<dicp_image_key, IntVarArray>{ };
     domains = map<dicp_image_key, IntSet>{ };
     source = BoolVarArray{*this, (int) num_commands, 0, 1};
@@ -24,15 +25,29 @@ DicpGecodeExtensiveSpace::DicpGecodeExtensiveSpace(DicpProblem problem) : proble
         arcs.push_back(arcs2);
     }
     for (int i = 0; i < num_stages; ++i)
-        nodes.push_back(IntVarArray{*this, (int) num_commands, 0, (int) num_commands});
-    for (int i = 0; i < num_stages; ++i) {
+        nodes.push_back(IntVarArray{*this, (int) num_commands, 0, (int) num_images});
+    for (int i = 0; i < (num_stages - 1); ++i) {
         vector<IntVarArray> entries2{ };
         for (int j = 0; j < num_commands; ++j)
-            entries2.push_back(IntVarArray{*this, (int) num_commands, 0, 1});
+            entries2.push_back(IntVarArray{*this, (int) num_commands, 0, (int) num_images});
         entries.push_back(entries2);
     }
     stage_costs = IntVarArray{*this, (int) num_stages, 0, Int::Limits::max};
     total_cost = IntVar{*this, 0, Int::Limits::max};
+
+    // Vectors relating schedule variables to source arcs in the network
+    map<int, BoolExpr> source_map{ };
+
+    // Vectors relating schedule variables to arc usage in the network
+    vector<vector<map<int, BoolExpr>>> arc_vecs{ };
+    for (int i = 0; i < (num_stages - 1); ++i) {
+        vector<map<int, BoolExpr>> arcs2{ };
+        for (int j = 0; j < num_commands; ++j) {
+            map<int, BoolExpr> arcs3{ };
+            arcs2.push_back(arcs3);
+        }
+        arc_vecs.push_back(arcs2);
+    }
 
     // Schedule for each individual image
     vector<DicpImage> images = problem.get_images();
@@ -58,44 +73,72 @@ DicpGecodeExtensiveSpace::DicpGecodeExtensiveSpace(DicpProblem problem) : proble
         distinct(*this, p.second);
 
         // First command requires an arc from the source
-        for (vector<DicpCommand>::iterator cit = commands.begin(); cit != commands.end(); ++cit)
-            rel(*this, source[cit->id] >= expr(*this, a[0] == cit->id));
+        for (vector<DicpCommand>::iterator cit = commands.begin(); cit != commands.end(); ++cit) {
+            int cid = cit->id;
+            if (source_map.find(cid) == source_map.end())
+                source_map[cid] = expr(*this, a[0] == cid);
+            else
+            source_map[cid] = expr(*this, source_map[cid] || (a[0] == cid));
+        }
 
         // Arcs
         for (int i = 0; i < (num_stages - 1); ++i)
             for (int j = 0; j < num_commands; ++j)
                 for (int k = 0; k < num_commands; ++k)
-                    if (j == k)
-                        continue;
-                    else if (a.size() > i + 1)
-                        rel(*this, (a[i] == j && a[i + 1] == k) >> arcs[i][j][k]);
+                    if (j != k && (a.size() > i + 1)) {
+                        if (arc_vecs[i][j].find(k) == arc_vecs[i][j].end())
+                            arc_vecs[i][j][k] = expr(*this, (a[i] == j && a[i + 1] == k));
+                        else
+                            arc_vecs[i][j][k] = expr(*this, arc_vecs[i][j][k] || (a[i] == j && a[i + 1] == k));
+                    }
 
         // Branching for image schedules
-        branch(*this, p.second, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+        branch(*this, p.second, INT_VAR_ACTIVITY_SIZE_MAX(), INT_VAL_SPLIT_MIN());
     }
+
+    // Source
+    for (int i = 0; i < num_commands; ++i)
+        if (source_map.find(i) == source_map.end())
+            rel(*this, !source[i]);
+        else
+            rel(*this, expr(*this, source_map[i]) == source[i]);
+
+    // Arcs
+    for (int i = 0; i < (num_stages - 1); ++i)
+        for (int j = 0; j < num_commands; ++j)
+            for (int k = 0; k < num_commands; ++k)
+                if (j == k || arc_vecs[i][j].find(k) == arc_vecs[i][j].end())
+                    rel(*this, !arcs[i][j][k]);
+                else
+                    rel(*this, expr(*this, arc_vecs[i][j][k]) == arcs[i][j][k]);
 
     // Nodes
     for (int i = 0; i < num_commands; ++i)
         rel(*this, nodes[0][i] == source[i]);
 
-    vector<int> e{ };
-    for (int i = 0; i < num_commands; ++i)
-        e.push_back(1);
+    for (int i = 0; i < (num_stages - 1); ++i)
+        for (int j = 0; j < num_commands; ++j) {
+            vector<int> e{ };
+            for (int k = 0; k < num_commands; ++k)
+                if (j == k)
+                    e.push_back(0);
+                else
+                    e.push_back(1);
 
-    for (int i = 0; i < num_stages; ++i)
-        for (int j = 0; j < num_commands; ++j)
-            linear(*this, e, entries[i][j], IRT_EQ, nodes[i][j]);
+            vector<IntVar> x{ };
+            for (int k = 0; k < num_commands; ++k)
+                x.push_back(entries[i][k][j]);
+            linear(*this, e, x, IRT_EQ, nodes[i+1][j]);
+        }
 
     // Entries
     for (int i = 0; i < (num_stages - 1); ++i)
         for (int j = 0; j < num_commands; ++j)
-            for (int k = 0; k < num_commands; ++k) {
+            for (int k = 0; k < num_commands; ++k)
                 if (j == k)
-                    continue;
-                ite(arcs[i][j][k],
-                    expr(*this, entries[i + 1][j][k] == nodes[i][j]),
-                    expr(*this, entries[i + 1][j][k] == 0));
-            }
+                    rel(*this, entries[i][j][k] == 0);
+                else
+                    ite(*this, arcs[i][j][k], nodes[i][j], zero, entries[i][j][k]);
 
     // Stage costs
     vector<DicpCommand> cmds = problem.get_commands();
@@ -117,6 +160,7 @@ DicpGecodeExtensiveSpace::DicpGecodeExtensiveSpace(DicpProblem problem) : proble
 DicpGecodeExtensiveSpace::DicpGecodeExtensiveSpace(bool share, DicpGecodeExtensiveSpace& s) :
         IntMinimizeSpace(share, s),
         problem{s.problem},
+        zero{s.zero},
         schedules{s.schedules},
         domains{s.domains},
         source{s.source},
@@ -149,6 +193,11 @@ IntVar DicpGecodeExtensiveSpace::cost(void) const {
     return total_cost;
 }
 
+void DicpGecodeExtensiveSpace::constrain(const Space& _b) {
+    const DicpGecodeExtensiveSpace& b = static_cast<const DicpGecodeExtensiveSpace&>(_b);
+    rel(*this, total_cost < b.total_cost.val());
+}
+
 void DicpGecodeExtensiveSpace::print(void) const {
     DicpProblem p{problem};
     for (map<dicp_image_key, IntVarArray>::const_iterator it = schedules.begin(); it != schedules.end(); ++it) {
@@ -158,11 +207,14 @@ void DicpGecodeExtensiveSpace::print(void) const {
         cout << endl;
     }
     cout << "[source] " << source << endl;
-//    for (int i = 0; i < arcs.size(); ++i)
-//        for (int j = 0; j < arcs[i].size(); ++j)
-//            cout << "[arcs(" << i << "," << j << ")] " << arcs[i][j] << endl;
+    for (int i = 0; i < arcs.size(); ++i)
+        for (int j = 0; j < arcs[i].size(); ++j)
+            cout << "[arcs(" << i << "," << j << ")] " << arcs[i][j] << endl;
     for (int i = 0; i < nodes.size(); ++i)
         cout << "[nodes " << i << "] " << nodes[i] << endl;
+    for (int i = 0; i < entries.size(); ++i)
+        for (int j = 0; j < entries[i].size(); ++j)
+            cout << "[entries(" << i << "," << j << ")] " << entries[i][j] << endl;
     cout << "[stage costs] " << stage_costs << endl;
     cout << "[total cost ] " << total_cost << endl;
     cout << "---------------" << endl;

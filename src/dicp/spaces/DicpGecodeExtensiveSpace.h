@@ -16,6 +16,7 @@ using namespace std;
 class DicpGecodeExtensiveSpace : public IntMinimizeSpace {
 protected:
     DicpProblem problem;
+    IntVar zero;
     map<dicp_image_key, IntVarArray> schedules;
     map<dicp_image_key, IntSet> domains;
     BoolVarArray source;
@@ -34,6 +35,9 @@ public:
 
     // Objective function
     virtual IntVar cost(void) const;
+
+    // Best-solution search
+    virtual void constrain(const Space& b);
 
     // Print solution
     void print(void) const;

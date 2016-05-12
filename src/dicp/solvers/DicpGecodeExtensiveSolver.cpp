@@ -11,7 +11,7 @@ using namespace Gecode;
 void DicpGecodeExtensiveSolver::solve(DicpProblem problem) {
     try {
         DicpGecodeExtensiveSpace *s = new DicpGecodeExtensiveSpace(problem);
-        DFS <DicpGecodeExtensiveSpace> e(s);
+        BAB <DicpGecodeExtensiveSpace> e(s);
         delete s;
 
         // Search & print all solutions
